@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mini User App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f5;
+    margin: 0;
+}
+
+.container {
+    max-width: 420px;
+    background: #fff;
+    margin: 40px auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+}
+
+input, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+textarea {
+    resize: none;
+}
+
+button {
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.error {
+    color: red;
+    text-align: center;
+    font-size: 14px;
+}
+
+.link {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.link a {
+    color: #007bff;
+    cursor: pointer;
+}
+
+.readonly p {
+    margin: 6px 0;
+}
+
+.logout {
+    background: #dc3545;
+}
+
+.secondary {
+    background: #6c757d;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    width: 300px;
+    margin: 100px auto;
+    border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- REGISTER -->
+<div class="container" id="registerPage">
+<h2>Register</h2>
+<div class="error" id="regError"></div>
+
+<input id="name" placeholder="Full Name">
+<input type="number" id="age" placeholder="Age">
+<input id="phone" placeholder="Phone">
+<input id="email" placeholder="Email">
+<textarea id="address" placeholder="Address"></textarea>
+<input id="pincode" placeholder="Pincode">
+<input type="password" id="password" placeholder="Password">
+
+<button onclick="register()">Sign Up</button>
+<div class="link">Already registered? <a onclick="showLogin()">Login</a></div>
+</div>
+
+<!-- LOGIN -->
+<div class="container" id="loginPage" style="display:none">
+<h2>Login</h2>
+<div class="error" id="loginError"></div>
+
+<input id="loginId" placeholder="Email or Phone">
+<input type="password" id="loginPass" placeholder="Password">
+
+<button onclick="login()">Login</button>
+<div class="link">New user? <a onclick="showRegister()">Register</a></div>
+</div>
+
+<!-- USER INFO -->
+<div class="container" id="userPage" style="display:none">
+<h2>User Profile</h2>
+
+<div id="viewMode" class="readonly"></div>
+
+<div id="editMode" style="display:none">
+<input id="eName">
+<input id="eAge">
+<input id="ePhone">
+<input id="eEmail">
+<textarea id="eAddress"></textarea>
+<input id="ePincode">
+</div>
+
+<button onclick="enableEdit()">Update Profile</button>
+<button onclick="saveProfile()" id="saveBtn" style="display:none">Update Changes</button>
+<button class="secondary" onclick="openPasswordModal()">Change Password</button>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal" id="passwordModal">
+<div class="modal-content">
+<h3>Change Password</h3>
+<div class="error" id="passError"></div>
+
+<input type="password" id="newPass" placeholder="New Password">
+<input type="password" id="confirmPass" placeholder="Confirm Password">
+<label>
+<input type="checkbox" id="confirmCheck"> I confirm to change password
+</label>
+
+<button onclick="changePassword()">Update</button>
+<button class="secondary" onclick="closePasswordModal()">Cancel</button>
+</div>
+</div>
+
+<script>
+/* ---------- Helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function showRegister(){ toggle("registerPage"); }
+function showLogin(){ toggle("loginPage"); }
+function showUser(){ toggle("userPage"); }
+function toggle(page){
+    ["registerPage","loginPage","userPage"].forEach(p => $(p).style.display="none");
+    $(page).style.display="block";
+}
+function isEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function isPhone(v){ return /^[0-9]{10}$/.test(v); }
+
+/* ---------- Register ---------- */
+function register(){
+    const user = {
+        name: name.value.trim(),
+        age: age.value,
+        phone: phone.value.trim(),
+        email: email.value.trim(),
+        address: address.value.trim(),
+        pincode: pincode.value.trim(),
+        password: password.value.trim()
+    };
+
+    if(!user.name || !user.email || !user.password){
+        regError.textContent = "Name, Email & Password required";
+        return;
+    }
+    if(localStorage.getItem("user")){
+        regError.textContent = "User already exists";
+        return;
+    }
+    localStorage.setItem("user", JSON.stringify(user));
+    showLogin();
+    loginId.value = user.email;
+}
+
+/* ---------- Login ---------- */
+function login(){
+    const id = loginId.value.trim();
+    const pass = loginPass.value.trim();
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if(!id || !pass){
+        loginError.textContent = "All fields required";
+        return;
+    }
+    if(!user){
+        loginError.textContent = "No user found";
+        return;
+    }
+    if((id===user.email || id===user.phone) && pass===user.password){
+        localStorage.setItem("loggedIn","true");
+        loadUser();
+        showUser();
+    } else {
+        loginError.textContent = "Invalid credentials";
+    }
+}
+
+/* ---------- User Info ---------- */
+function loadUser(){
+    const u = JSON.parse(localStorage.getItem("user"));
+    viewMode.innerHTML = `
+        <p><b>Name:</b> ${u.name}</p>
+        <p><b>Age:</b> ${u.age}</p>
+        <p><b>Phone:</b> ${u.phone}</p>
+        <p><b>Email:</b> ${u.email}</p>
+        <p><b>Address:</b> ${u.address}</p>
+        <p><b>Pincode:</b> ${u.pincode}</p>
+    `;
+}
+
+function enableEdit(){
+    const u = JSON.parse(localStorage.getItem("user"));
+    viewMode.style.display="none";
+    editMode.style.display="block";
+    saveBtn.style.display="block";
+
+    eName.value=u.name; eAge.value=u.age; ePhone.value=u.phone;
+    eEmail.value=u.email; eAddress.value=u.address; ePincode.value=u.pincode;
+}
+
+function saveProfile(){
+    const u = JSON.parse(localStorage.getItem("user"));
+    u.name=eName.value; u.age=eAge.value; u.phone=ePhone.value;
+    u.email=eEmail.value; u.address=eAddress.value; u.pincode=ePincode.value;
+
+    localStorage.setItem("user",JSON.stringify(u));
+    editMode.style.display="none";
+    saveBtn.style.display="none";
+    viewMode.style.display="block";
+    loadUser();
+}
+
+/* ---------- Change Password ---------- */
+function openPasswordModal(){ passwordModal.style.display="block"; }
+function closePasswordModal(){ passwordModal.style.display="none"; }
+
+function changePassword(){
+    const np=newPass.value, cp=confirmPass.value;
+    if(!confirmCheck.checked){
+        passError.textContent="Please confirm checkbox";
+        return;
+    }
+    if(np!==cp || np.length<6){
+        passError.textContent="Passwords mismatch / too short";
+        return;
+    }
+    const u=JSON.parse(localStorage.getItem("user"));
+    u.password=np;
+    localStorage.setItem("user",JSON.stringify(u));
+    closePasswordModal();
+}
+
+/* ---------- Logout & Route Protection ---------- */
+function logout(){
+    localStorage.removeItem("loggedIn");
+    showLogin();
+}
+
+if(localStorage.getItem("loggedIn")){
+    loadUser(); showUser();
+}else{
+    showLogin();
+}
+</script>
+</body>
+</html>
