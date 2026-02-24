@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reports - MRMS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      display: flex;
+      background-color: #f8f9fa;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #004085;
+      color: white;
+      height: 100vh;
+      position: fixed;
+      padding-top: 20px;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      padding-bottom: 15px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      padding: 15px 25px;
+      text-decoration: none;
+    }
+
+    .sidebar a:hover {
+      background: #0056b3;
+    }
+
+    .main {
+      margin-left: 220px;
+      padding: 40px;
+      width: calc(100% - 220px);
+    }
+
+    h1 {
+      color: #004085;
+      margin-bottom: 25px;
+    }
+
+    select {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 300px;
+    }
+
+    .btn-group {
+      margin-top: 15px;
+    }
+
+    .btn-group button {
+      margin-right: 10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn-group button:hover {
+      background-color: #218838;
+    }
+
+    .report-section {
+      margin-top: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>Admin Panel</h2>
+  <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+  <a href="#"><i class="fas fa-users"></i> Manage MR</a>
+  <a href="#"><i class="fas fa-pills"></i> Manage Products</a>
+  <a href="#"><i class="fas fa-calendar-check"></i> Manage Visits</a>
+  <a href="#"><i class="fas fa-comment-dots"></i> Manage Feedback</a>
+  <a href="reports.html"><i class="fas fa-chart-line"></i> Reports</a>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+  <h1>System Reports</h1>
+
+  <label><strong>Select Report Type:</strong></label><br><br>
+
+  <select onchange="showReport(this.value)">
+    <option value="">-- Select Report --</option>
+    <option value="Visit Report">Visit Report</option>
+    <option value="Doctors Report">Doctors Report</option>
+    <option value="Top Performing MRs">Top Performing MRs</option>
+  </select>
+
+  <div class="btn-group">
+    <button onclick="printReport()"><i class="fas fa-print"></i> Print</button>
+    <button onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
+  </div>
+
+  <!-- Default Report -->
+  <div id="report-section" class="report-section">
+    <h2>Visit Report</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Visit ID</th>
+          <th>MR Name</th>
+          <th>Doctor</th>
+          <th>Date</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>V001</td>
+          <td>Rahul Patil</td>
+          <td>Dr. Sharma</td>
+          <td>20-02-2026</td>
+          <td>Product Promotion</td>
+        </tr>
+
+        <tr>
+          <td>V002</td>
+          <td>Priya Mehta</td>
+          <td>Dr. Kulkarni</td>
+          <td>21-02-2026</td>
+          <td>Follow-up Visit</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  function showReport(value) {
+    const section = document.getElementById("report-section");
+
+    if (!value) {
+      section.innerHTML = "";
+      return;
+    }
+
+    section.innerHTML = `
+      <h2>${value}</h2>
+      <p>This is a sample frontend preview of <strong>${value}</strong>.</p>
+    `;
+  }
+
+  function printReport() {
+    const content = document.getElementById("report-section").innerHTML;
+    const original = document.body.innerHTML;
+    document.body.innerHTML = content;
+    window.print();
+    document.body.innerHTML = original;
+    location.reload();
+  }
+
+  function downloadPDF() {
+    const element = document.getElementById("report-section");
+    html2pdf().from(element).save("report.pdf");
+  }
+</script>
+
+</body>
+</html>
